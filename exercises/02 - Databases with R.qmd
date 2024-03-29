@@ -1,0 +1,131 @@
+---
+title: "02 - Databases with R"
+format: html
+editor: visual
+---
+
+## Exercise 1: Setup
+
+Run the setup chunk below to load the packages we need for a database connection
+
+```{r setup}
+library(tidyverse)
+library(DBI)
+library(RSQLite)
+library(connections)
+```
+
+## Connecting to Databases
+
+```{r}
+# example code - not executable
+con_name <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
+                      dbname = “file_name.sqlite”) # file (for SQLite or other file-based DBs)
+```
+
+```{r}
+# example code - not executable
+con_name <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
+                      dbname = “file_name.sqlite”, # file (for SQLite or other file-based DBs)
+                      extended_types = TRUE) # preserves date and time formatting from SQLite 
+```
+
+```{r}
+# example code - not executable
+dbListTables(conn = con_name)
+```
+
+```{r}
+# example code - not executable
+dbListFields(conn = con_name,
+             name = table_name)
+```
+
+### Exercise 1
+
+Connect to MIMIC database
+
+List tables
+
+List fields from LABEVENTS and D_LABITEMS
+
+```{r}
+con <- dbConnect(drv = RSQLite::SQLite(), 
+                 dbname = "mimic4.db")
+con <- dbConnect(drv = RSQLite::SQLite(), 
+                 dbname = "../mimic4.db",
+                 extended_types = TRUE)
+connection_view(con)
+```
+
+```{r}
+dbListTables(conn = con)
+
+dbListFields(con,"LABEVENTS")
+
+```
+
+## Using the Connections Pane
+
+```{r}
+library(connections)
+```
+
+```{r}
+connection_view(con)
+```
+
+### Exercise 2
+
+Use the Connections pane to answer:
+
+How many dimension tables are included in the database?
+
+## Working with Tables
+
+```{r}
+# not executable
+table_object <- tbl(connection_object, "table_name")
+```
+
+### Select
+
+```{r}
+column_subset <- select(table_object, column_1, column_2)
+```
+
+### Filter
+
+```{r}
+row_subset <- filter(table_object, column_name == criteria)
+```
+
+### Exercise 3
+
+Select + filter exercise
+
+### Count
+
+```{r}
+group_count <- table_object |> 
+  count(column_1, column_2)
+```
+
+### Exercise 4
+
+Count number of patients from admissions table
+
+## Memory Considerations
+
+Data not pulled into memory until required
+
+```{r}
+retrieved_object <- table_object |> 
+  collect()
+```
+
+Alternative mechanism for retrieving data
+
+```{r}
+labevents <- dbReadTable(con, "LABEVENTS")
+```
