@@ -6,80 +6,101 @@ editor: visual
 
 ## Exercise 1: Setup
 
-Run the setup chunk below to load the packages we need for a database connection
+Run the setup chunk below to load the packages we need for a database connection. The DBI package provides functions to connect to and work with various types of databases. The RSQLite contains a specific driver to allow connections with SQLite databases, which are stored a single file.
 
 ```{r setup}
 library(tidyverse)
 library(DBI)
 library(RSQLite)
-library(connections)
 ```
 
 ## Connecting to Databases
 
-```{r}
-# example code - not executable
-con_name <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
-                      dbname = “file_name.sqlite”) # file (for SQLite or other file-based DBs)
-```
+The `dbConnect()` function in the DBI package allows you to create a connection object with the details of a specific database connection. Below we are creating a connection object *con* that utilizes the SQLite driver (expressed as the function `RSQLite::SQLite()`) to connect to a database stored in the file "file_name.db".
 
 ```{r}
 # example code - not executable
-con_name <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
-                      dbname = “file_name.sqlite”, # file (for SQLite or other file-based DBs)
-                      extended_types = TRUE) # preserves date and time formatting from SQLite 
+con <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
+                 dbname = “file_name.db”) # file (for SQLite or other file-based DBs)
 ```
 
-```{r}
-# example code - not executable
-dbListTables(conn = con_name)
-```
-
-```{r}
-# example code - not executable
-dbListFields(conn = con_name,
-             name = table_name)
-```
-
-### Exercise 1
-
-Connect to MIMIC database
-
-List tables
-
-List fields from LABEVENTS and D_LABITEMS
+There is a small sample SQLite database file "test_database.db" in the parent directory for this repository. We will create a connection object *con* that connects to the database in this file:
 
 ```{r}
 con <- dbConnect(drv = RSQLite::SQLite(), 
-                 dbname = "mimic4.db")
-con <- dbConnect(drv = RSQLite::SQLite(), 
-                 dbname = "../mimic4.db",
-                 extended_types = TRUE)
-connection_view(con)
+                 dbname = "../test_database.db") 
 ```
+
+The *con* connection object will be visible in your environment.
+
+Connections to SQLite are straightforward because they are contained within a single file and do not require additional credentials or other technical connection details (e.g. a port). Review the DBI package documentation and vignettes to learn how to connect to other types of databases using different drivers.
+
+Once connected you may want to see the tables within the database. You can use the `dbListTables()` function on the connection object to review this.
 
 ```{r}
 dbListTables(conn = con)
+```
 
-dbListFields(con,"LABEVENTS")
+For a given table within the database you can inspect the fields (i.e. variables or columns) using the `dbListFields()` and providing the connection object as one argument as well as the name of the table of interest (in quotes) as another argument.
+
+```{r}
+dbListFields(conn = con,
+             name = "sample")
+```
+
+### Exercise 2: Connecting to the database and reviewing its structure
+
+Connect to MIMIC database by building a connection object named "mimic" that connects to the SQLite database in the file mimic4.db. The file mimic4.db is not in the directory this file is in (exercises/) but it is available in the main directory for this project (hint: "../" can be used to point to the directory that is one level higher than the current directory, i.e. "../file_name"). After connecting, how can you confirm you are connected?
+
+```{r}
+mimic <- dbConnect(drv = RSQLite::SQLite(), 
+                 dbname = "../mimic4.db")
 
 ```
 
-## Using the Connections Pane
+List the tables in the mimic database.
+
+```{r}
+dbListTables(conn = mimic)
+```
+
+List the fields from *labevents* and *d_labitems* tables.
+
+```{r}
+dbListFields(mimic,"labevents")
+dbListFields(mimic,"d_labitems")
+```
+
+##  Using the Connections Pane
+
+RStudio provides additional tools to assist with reviewing the tables and fields available in your database. In the top left of your RStudio window, where the Environment tab appears, there is a Connections tab that can be used to initiate database connections manually. To maintain reproducibility we encourage scripting the creation of the connection object, but to take advantage of the Connections tab we can use the *connections* package. Below we load the connections package and use the `connection_view()` function on our connection object *con*. This should update your Connections tab so you can see a SQLiteConnection object. You can click on the blue arrow to the left of the SQLiteConnection and drill down to the table and field levels.
 
 ```{r}
 library(connections)
-```
-
-```{r}
 connection_view(con)
 ```
 
-### Exercise 2
+When we are done working with databases we can use the `dbDisconnect()` function on the specific connection object of interest to close the database connection. The `connection_view()` function only supports a single connection at a time so let's go ahead and close the database connection to prep for the next exercise.
 
-Use the Connections pane to answer:
+```{r}
+dbDisconnect(con)
+```
 
-How many dimension tables are included in the database?
+### Exercise 3: Viewing the database in the Connections tab
+
+Let's use the Connections tab to navigate the mimic database. First, disconnect from the mimic database to clean the slate of connections.
+
+```{r}
+dbDisconnect(mimic)
+```
+
+Next reopen the connection to the mimic SQLite database (you can use the original code to establish the connection from Exercise 1). Then enable the view of the database in the Connections pane and use the pane to answer how many dimension tables are included in the database.
+
+```{r}
+mimic <- dbConnect(drv = RSQLite::SQLite(), 
+                 dbname = "../mimic4.db")
+connection_view(mimic)
+```
 
 ## Working with Tables
 
@@ -128,4 +149,8 @@ Alternative mechanism for retrieving data
 
 ```{r}
 labevents <- dbReadTable(con, "LABEVENTS")
+```
+
+```{r}
+dbDisconnect(mimic)
 ```
