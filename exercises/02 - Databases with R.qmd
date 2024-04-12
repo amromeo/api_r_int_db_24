@@ -104,9 +104,25 @@ connection_view(mimic)
 
 ## Working with Tables
 
+Once you connect to a database you will likely want to access the data and analyze it as if it were one or more data frames. We use the `tbl()` function and provide a connection object and a table name (in quotes) to create a table object.
+
 ```{r}
 # not executable
 table_object <- tbl(connection_object, "table_name")
+```
+
+We can connect to the mimic database the *d_labitems* table:
+
+```{r}
+d_labitems <- tbl(mimic, "d_labitems")
+```
+
+Note that this table object now appears in your Environment. However when you click on it to display the object in the View window you do not see any raw data and see some information about the connection object instead. That is because the table object is not actually a data frame - it is just a connection to the table in the database. No data has been brought into the environment (yet).
+
+We are able to use the `head()` function to visualize the first 10 observations/rows:
+
+```{r}
+head(d_labitems, 10)
 ```
 
 ### Select
