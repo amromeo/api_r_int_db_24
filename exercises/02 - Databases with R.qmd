@@ -24,14 +24,7 @@ con <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
                  dbname = “file_name.db”) # file (for SQLite or other file-based DBs)
 ```
 
-There is a small sample SQLite database file "test_database.db" in the parent directory for this repository. We will create a connection object *con* that connects to the database in this file:
-
-```{r}
-con <- dbConnect(drv = RSQLite::SQLite(), 
-                 dbname = "../test_database.db") 
-```
-
-The *con* connection object will be visible in your environment.
+When the connection is established, the *con* connection object will be visible in your environment.
 
 Connections to SQLite are straightforward because they are contained within a single file and do not require additional credentials or other technical connection details (e.g. a port). Review the DBI package documentation and vignettes to learn how to connect to other types of databases using different drivers.
 
@@ -50,7 +43,13 @@ dbListFields(conn = con,
 
 ### Exercise 2: Connecting to the database and reviewing its structure
 
-Connect to MIMIC database by building a connection object named "mimic" that connects to the SQLite database in the file mimic4.db. The file mimic4.db is not in the directory this file is in (exercises/) but it is available in the main directory for this project (hint: "../" can be used to point to the directory that is one level higher than the current directory, i.e. "../file_name"). After connecting, how can you confirm you are connected?
+First use the `getwd()` function to identify the working directory for the notebook. This is important because you may have to direct R to the appropriate path for a file if it is not already in your working directory.
+
+```{r}
+getwd()
+```
+
+Connect to the MIMIC database by building a connection object named "mimic" that connects to the SQLite database in the file mimic4.db. The file mimic4.db is available in the main directory for this project. (Hint: "../" can be used to point to the directory that is one level higher than the current directory, i.e. "../file_name".) After connecting, how can you confirm you are connected?
 
 ```{r}
 mimic <- dbConnect(drv = RSQLite::SQLite(), 
@@ -58,7 +57,7 @@ mimic <- dbConnect(drv = RSQLite::SQLite(),
 
 ```
 
-List the tables in the mimic database.
+Now list the tables in the mimic database.
 
 ```{r}
 dbListTables(conn = mimic)
@@ -71,7 +70,7 @@ dbListFields(mimic,"labevents")
 dbListFields(mimic,"d_labitems")
 ```
 
-##  Using the Connections Pane
+## Using the Connections Pane
 
 RStudio provides additional tools to assist with reviewing the tables and fields available in your database. In the top left of your RStudio window, where the Environment tab appears, there is a Connections tab that can be used to initiate database connections manually. To maintain reproducibility we encourage scripting the creation of the connection object, but to take advantage of the Connections tab we can use the *connections* package. Below we load the connections package and use the `connection_view()` function on our connection object *con*. This should update your Connections tab so you can see a SQLiteConnection object. You can click on the blue arrow to the left of the SQLiteConnection and drill down to the table and field levels.
 
@@ -80,27 +79,19 @@ library(connections)
 connection_view(con)
 ```
 
-When we are done working with databases we can use the `dbDisconnect()` function on the specific connection object of interest to close the database connection. The `connection_view()` function only supports a single connection at a time so let's go ahead and close the database connection to prep for the next exercise.
-
-```{r}
-dbDisconnect(con)
-```
-
 ### Exercise 3: Viewing the database in the Connections tab
 
-Let's use the Connections tab to navigate the mimic database. First, disconnect from the mimic database to clean the slate of connections.
+Let's use the Connections tab to navigate the mimic database. Use the `connection_view()` on the database object we created.
 
 ```{r}
-dbDisconnect(mimic)
-```
-
-Next reopen the connection to the mimic SQLite database (you can use the original code to establish the connection from Exercise 1). Then enable the view of the database in the Connections pane and use the pane to answer how many dimension tables are included in the database.
-
-```{r}
-mimic <- dbConnect(drv = RSQLite::SQLite(), 
-                 dbname = "../mimic4.db")
 connection_view(mimic)
 ```
+
+Navigate to the Connections window tab on the top right and answer the following questions:
+
+-   If we are interested in reviewing details about laboratory test results, which tables would we be interested in?
+
+-   In the d_labitems table, how many fields are present?
 
 ## Working with Tables
 
@@ -122,13 +113,29 @@ Note that this table object now appears in your Environment. However when you cl
 We are able to use the `head()` function to visualize the first 10 observations/rows:
 
 ```{r}
-head(d_labitems, 10)
+head(d_labitems, 100)
 ```
+
+### Exercise 4: Connecting to a Table
+
+Create a new table object *labevents* that connects to the labevents table. Review the first 100 rows of the table using the `head()` function. Are there any variables missing from this table that would help to interpret the output?
+
+```{r}
+labevents <- tbl(mimic, "labevents")
+head(labevents, 100)
+```
+
+## Using dbplyr to apply dplyr functions to databases
 
 ### Select
 
 ```{r}
 column_subset <- select(table_object, column_1, column_2)
+```
+
+```{r}
+variable_subset <- select(d_labitems,
+                          itemid, label)
 ```
 
 ### Filter
@@ -137,9 +144,36 @@ column_subset <- select(table_object, column_1, column_2)
 row_subset <- filter(table_object, column_name == criteria)
 ```
 
-### Exercise 3
+```{r}
+filter(d_labitems, label == "Glucose")
+```
 
-Select + filter exercise
+### Pipes
+
+```{r}
+filter(d_labitems, label == "Glucose")
+```
+
+```{r}
+d_labitems |> filter(label == "Glucose")
+```
+
+```{r}
+glucose_events <- labevents|>
+  filter(itemid == 50809) |> # itemid for Glucose
+  select(subject_id, specimen_id, itemid, value, valueuom)
+```
+
+### Exercise 5
+
+Using `select()` and `filter()` (and pipes), create a subset of data from the labevents table that includes lactate observations (itemid 50813) and the following variables: specimenid, value, ref_range_lower, ref_range_upper. Create a new table object labevents_subset to store that data. Use the `head()` function to review the first rows of the table.
+
+```{r}
+labevents_subset <- labevents |> 
+  filter(itemid == 50813) |> 
+  select(specimen_id, value, ref_range_lower, ref_range_upper)
+head(labevents_subset)
+```
 
 ### Count
 
@@ -165,6 +199,12 @@ Alternative mechanism for retrieving data
 
 ```{r}
 labevents <- dbReadTable(con, "LABEVENTS")
+```
+
+When we are done working with databases we can use the `dbDisconnect()` function on the specific connection object of interest to close the database connection.
+
+```{r}
+dbDisconnect(con)
 ```
 
 ```{r}
