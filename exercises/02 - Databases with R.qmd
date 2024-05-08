@@ -140,15 +140,13 @@ column_subset <- select(table_object, column_1, column_2)
 In this example we are selecting two variables from the d_labitems object.
 
 ```{r}
-variable_subset <- select(d_labitems,
-                          itemid, label)
+select(d_labitems, itemid, label)
 ```
 
 Specific variables can be removed with "-".
 
 ```{r}
-variable_subset <- select(d_labitems,
-                          -category)
+select(d_labitems, -category)
 ```
 
 ### Filter
@@ -162,7 +160,7 @@ row_subset <- filter(table_object, column_name == criteria)
 For example we may want to see the lab test items that are labelled as "Glucose".
 
 ```{r}
-glucose_items <- filter(d_labitems, label == "Glucose")
+filter(d_labitems, label == "Glucose")
 ```
 
 There are a variety of other operators that can be used as inclusion criteria that we do not address here but appear in the `filter()` documentation as well as the *R for Data Science* text.
@@ -182,7 +180,7 @@ d_labitems |> filter(label == "Glucose")
 Pipes allow you to link together sequential analysis steps in a readable format.
 
 ```{r}
-glucose_events <- labevents |>
+labevents |>
   filter(itemid == 50809) |> # itemid for Glucose
   select(subject_id, specimen_id, itemid, value, valueuom)
 ```
@@ -221,15 +219,17 @@ There are multiple other functions that can be applied within the `summary()` fu
 ```{r}
 labtest_counts <- labevents |> 
   count(itemid) # variable to subset the data on for counting rows
+labtest_counts
 ```
 
 ### Exercise 6
 
-Using `count()` generate a new table object tests_per_subject that shows the number of lab events per subject_id.
+Using `count()` generate a new table object tests_per_subject that shows the number of lab events per subject_id. View the first 100 rows of the new table.
 
 ```{r}
-labtest_counts <- labevents |> 
+tests_per_subject <- labevents |> 
   count(subject_id)
+head(tests_per_subject, 100)
 ```
 
 ### dbplyr and SQL translation
@@ -246,7 +246,7 @@ labevents|>
 
 would be translated into the following SQL:
 
-```{sql}
+```{sql, connection = mimic}
 SELECT subject_id, specimen_id, itemid, value, valueuom
 FROM labevents
 WHERE itemid = 50809
@@ -275,6 +275,7 @@ Here we can take the count of itemids from the labevents table and bring the dat
 labtest_counts <- labevents |> 
   count(itemid) |> 
   collect()
+View(labtest_counts)
 ```
 
 ## Disconnecting from Databases
