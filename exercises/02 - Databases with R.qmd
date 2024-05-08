@@ -102,7 +102,7 @@ Once you connect to a database you will likely want to access the data and analy
 table_object <- tbl(connection_object, "table_name")
 ```
 
-We can connect to the mimic database the *d_labitems* table:
+We can connect to the mimic database and the *d_labitems* table:
 
 ```{r}
 d_labitems <- tbl(mimic, "d_labitems")
