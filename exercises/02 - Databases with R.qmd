@@ -102,7 +102,7 @@ Once you connect to a database you will likely want to access the data and analy
 table_object <- tbl(connection_object, "table_name")
 ```
 
-We can connect to the mimic database the *d_labitems* table:
+We can connect to the mimic database and the *d_labitems* table:
 
 ```{r}
 d_labitems <- tbl(mimic, "d_labitems")
@@ -127,28 +127,47 @@ head(labevents, 100)
 
 ## Using dbplyr to apply dplyr functions to databases
 
+In this section we re-introduce functions from the dplyr package that have very similar behavior when applied to databases and their table objects.
+
 ### Select
+
+The `select()` function creates a subset of data focused on specific variables/fields (columns) from an existing table or data frame. The behavior is identical when applied to a table object as when it is applied to a data frame.
 
 ```{r}
 column_subset <- select(table_object, column_1, column_2)
 ```
 
+In this example we are selecting two variables from the d_labitems object.
+
 ```{r}
-variable_subset <- select(d_labitems,
-                          itemid, label)
+select(d_labitems, itemid, label)
+```
+
+Specific variables can be removed with "-".
+
+```{r}
+select(d_labitems, -category)
 ```
 
 ### Filter
+
+The `filter()` function is used to create a subset of observations/rows that fulfill a specific inclusion criteria. One common criteria is variable being equal to a specific value.
 
 ```{r}
 row_subset <- filter(table_object, column_name == criteria)
 ```
 
+For example we may want to see the lab test items that are labelled as "Glucose".
+
 ```{r}
 filter(d_labitems, label == "Glucose")
 ```
 
+There are a variety of other operators that can be used as inclusion criteria that we do not address here but appear in the `filter()` documentation as well as the *R for Data Science* text.
+
 ### Pipes
+
+Data transformation often requires sequential steps for which there is limited value in creating intermediate data frames/objects. One way to streamline your code is by using the pipe `|>` (R's native pipe, the older version of the pipe is `%>%`). The pipe operator moves the object/output from the left side of the pipe into the first argument of the function of the right side of the pipe (or on the next line). The two following code chunks are therefore equivalent:
 
 ```{r}
 filter(d_labitems, label == "Glucose")
@@ -158,13 +177,21 @@ filter(d_labitems, label == "Glucose")
 d_labitems |> filter(label == "Glucose")
 ```
 
+Pipes allow you to link together sequential analysis steps in a readable format.
+
 ```{r}
-glucose_events <- labevents|>
+labevents |>
   filter(itemid == 50809) |> # itemid for Glucose
   select(subject_id, specimen_id, itemid, value, valueuom)
 ```
 
-### Exercise 5
+There are keyboard shortcuts to make adding pipes easier:
+
+-   Command + Shift + "m" (the key) on a Mac
+
+-   Control + Shift + "m" on Windows
+
+### Exercise 5: Applying dplyr functions
 
 Using `select()` and `filter()` (and pipes), create a subset of data from the labevents table that includes lactate observations (itemid 50813) and the following variables: specimenid, value, ref_range_lower, ref_range_upper. Create a new table object labevents_subset to store that data. Use the `head()` function to review the first rows of the table.
 
@@ -177,29 +204,81 @@ head(labevents_subset)
 
 ### Count
 
+The `group_by()` and `summarize()` functions are arguably the most useful functions in the dplyr package, as they allow you to create subsets of your data based on one or more variables and then apply calculations or summaries to those groups in parallel using limited code.
+
+If we wanted to see the number of times each itemid (think of this as a test from the catalog) appears in our labevents table, we can group the data by itemid and then summarize each group with the `n()` function which simply counts the number of rows each itemid appears.
+
 ```{r}
-group_count <- table_object |> 
-  count(column_1, column_2)
+labevents |> 
+  group_by(itemid) |> 
+  summarize(test_count = n())
 ```
 
-### Exercise 4
+There are multiple other functions that can be applied within the `summary()` function but counting rows is a frequent operation. If the only operation you need is to count rows, you can further simplify your code by using the `count()` function:
 
-Count number of patients from admissions table
+```{r}
+labtest_counts <- labevents |> 
+  count(itemid) # variable to subset the data on for counting rows
+labtest_counts
+```
 
-## Memory Considerations
+### Exercise 6
 
-Data not pulled into memory until required
+Using `count()` generate a new table object tests_per_subject that shows the number of lab events per subject_id. View the first 100 rows of the new table.
+
+```{r}
+tests_per_subject <- labevents |> 
+  count(subject_id)
+head(tests_per_subject, 100)
+```
+
+### dbplyr and SQL translation
+
+When you apply dplyr functions to database connections and table objects, R is using another package called dbplyr to translate the R code you have written into SQL and then query the database with that translated code.
+
+For example the following code to create a subset of glucose events:
+
+```{r}
+labevents|>
+  filter(itemid == 50809) |> # itemid for Glucose
+  select(subject_id, specimen_id, itemid, value, valueuom)
+```
+
+would be translated into the following SQL:
+
+```{sql, connection = mimic}
+SELECT subject_id, specimen_id, itemid, value, valueuom
+FROM labevents
+WHERE itemid = 50809
+```
+
+The expected SQL output can be generated using the `show_query()` function:
+
+```{r}
+labtest_counts <- labevents |> 
+  count(itemid) |> 
+  show_query()
+```
+
+### Memory Considerations
+
+We mentioned previously that connection and table objects do not have the same characteristics as typical data frames, for which the contents are available in your environment. However, it is possible to bring the contents of a table into memory as a data frame using the `collect()` function.
 
 ```{r}
 retrieved_object <- table_object |> 
   collect()
 ```
 
-Alternative mechanism for retrieving data
+Here we can take the count of itemids from the labevents table and bring the data into a data frame within our environment.
 
 ```{r}
-labevents <- dbReadTable(con, "LABEVENTS")
+labtest_counts <- labevents |> 
+  count(itemid) |> 
+  collect()
+View(labtest_counts)
 ```
+
+## Disconnecting from Databases
 
 When we are done working with databases we can use the `dbDisconnect()` function on the specific connection object of interest to close the database connection.
 
@@ -207,6 +286,10 @@ When we are done working with databases we can use the `dbDisconnect()` function
 dbDisconnect(con)
 ```
 
+To close are specific connection to the mimic database:
+
 ```{r}
 dbDisconnect(mimic)
 ```
+
+Note that you will have to reconnect to the database for future lessons.
