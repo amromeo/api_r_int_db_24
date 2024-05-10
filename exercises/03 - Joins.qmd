@@ -26,12 +26,13 @@ mimic <- dbConnect(drv = RSQLite::SQLite(),
 connection_view(mimic)  # Necessary to view SQLite database tables in the Connections pane
 ```
 
-```{r con_tables}
-labevents <- tbl(con, "LABEVENTS")
-d_labitems <- tbl(con, "D_LABITEMS")
-patients <- tbl(con, "PATIENTS")
-```
+Establish connection tables needed for the session.
 
+```{r con_tables}
+labevents <- tbl(mimic, "LABEVENTS")
+d_labitems <- tbl(mimic, "D_LABITEMS")
+patients <- tbl(mimic, "PATIENTS")
+```
 
 #### Exercise 1a:
 
@@ -60,6 +61,7 @@ labevents <- tbl(___, ______)
 ## Create a pipe that starts from labevents database table and determines which itemid was ordered most frequently (This exercise reviews an exercise from Lesson 2)
 labevents |>
 
+  
 ```
 
 Based on the above you should have identified the lab order associated with itemid 50971 as the most frequently ordered test.
@@ -92,20 +94,19 @@ An inner join:
 
 -   Combines columns from both tables.
 
+A prototypical left_join() function in R is structured like this:
+
 ```{r inner_join_template}
-
-# left_join() functions in R are structured like this:
 left_join(df1,df2,join_by(shared_column))
-
 ```
 
-```{r}
+We can use this function to bring in the metadata relating to the lab orders in order to decode the itemid's
 
+```{r inner_join_example}
+inner_join(labevents,d_labitems,join_by(itemid))
 ```
 
-```{r}
-# Will they be familiar with this table at this point? if no may need to look at table, fields, etc.
-```
+### Exercise 2
 
 ```{r}
 top_itemid <- db_lab_events |> 
