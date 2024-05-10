@@ -89,9 +89,7 @@ Joins are a mechanism to merge together data from two different tables that cont
 An inner join:
 
 -   Retains only rows that match in both tables.
-
 -   Excludes rows without matches in both tables.
-
 -   Combines columns from both tables.
 
 A prototypical left_join() function in R is structured like this:
@@ -108,21 +106,28 @@ inner_join(labevents,d_labitems,join_by(itemid))
 
 ### Exercise 2
 
-```{r}
-top_itemid <- db_lab_events |> 
-  count(itemid) |>
-  slice_max(n) |>
-  pull(itemid)
+Starting with labevents, join to the d_labitems table using inner_join. Assign the result of your functions to labevents_n
 
-top_itemid
+Find the number of times each lab order was placed
+
+```{r exercise_2a}
+labevents_n <- labevents |>
+
 ```
 
-```{r}
-lab_items |>
-  filter(itemid == top_itemid)
-```
+Follow-up questions: 
+-   Examine the original labevents table. 
+-   How many distinct itemid's does it have?
 
-But what if you wanted to do all the labs.....
+-   Examine the labevents_n table you produced.
+-   How many distinct ItemIDs (test order types) does it have?
+
+```{r exercise_2b}
+labevents |>
+  
+labevents_n |>
+
+```
 
 ## Joins
 
