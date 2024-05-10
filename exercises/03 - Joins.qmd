@@ -6,41 +6,104 @@ editor_options:
   chunk_output_type: inline
 ---
 
-## Need for Joins
+## Introduction
 
-```{r}
+Run the setup chunk below to load the packages we need for the session.
+
+```{r setup}
 library(tidyverse)
 library(DBI)
 library(RSQLite)
 library(connections)
+```
 
-con <- dbConnect(RSQLite::SQLite(), "/cloud/project/mimic4.db")
-# con <- dbConnect(RSQLite::SQLite(), dbname = "mimic_database.sqlite")
+Connect to the MIMIC IV database
 
-connection_view(con)  # Remove if we are not pursuing the connections pane
+```{r connect}
+mimic <- dbConnect(drv = RSQLite::SQLite(), 
+                 dbname = "../mimic4.db")
+
+connection_view(mimic)  # Necessary to view SQLite database tables in the Connections pane
+```
+
+```{r con_tables}
+labevents <- tbl(con, "LABEVENTS")
+d_labitems <- tbl(con, "D_LABITEMS")
+patients <- tbl(con, "PATIENTS")
 ```
 
 
-```{r}
-# This is really more appriorpiate for patrick's talk i think
+#### Exercise 1a:
 
-dbListTables(conn = con)
+CAP is inspecting your lab and one of the inspectors asked your chair what your top performed test is.
 
-dbListFields(con,"LABEVENTS")
+Your chair surreptitiously texts you as he distracts the inspector with some free Nespresso……
 
-labevents <- dbReadTable(con, "LABEVENTS")
+Connect to the MIMIC IV database and answer:
+
+**What the most commonly ordered lab test is in the database?**
+
+*HINT: Analytic Strategy:*
+
+1.  *Connect to the LABEVENTS table*
+
+2.  *Count the number of rows per itemid*
+
+3.  *Arrange from large to smallest count*
+
+4.  *Top row is the winner!*
+
+```{r exercise_1a}
+## Review - Create a new table object *labevents* that connects to the labevents MIMIC-IV table.
+labevents <- tbl(___, ______)
+
+## Create a pipe that starts from labevents database table and determines which itemid was ordered most frequently (This exercise reviews an exercise from Lesson 2)
+labevents |>
 
 ```
 
-## Set up need for joins
+Based on the above you should have identified the lab order associated with itemid 50971 as the most frequently ordered test.
 
-Question: What is the most commonly ordered lab?
+But what is that lab test?
+
+You can determine this using the tools you already know.
+
+1.  Find 50971 in the View pane for D_LABITEMS
+
+2.  Connect to D_LABITEMS and use `filter` to 50971.
+
+### Exercise 1b:
+
+Use one of the strategies above to determine what the most frequently ordered lab test is.
+
+**But what if you needed to know what the *top 100* test orders were?**
+
+## Joins
+
+Joins are a mechanism to merge together data from two different tables that contain related data. In our example the labevents table and the d_labitems tables are related. The former contains information about each lab order placed in the EHR. the d_labitems table has metadata about each of the kinds of lab orders that can be placed in the EMR. On a more concrete level, the 'itemid' columns in both tables hold matching values, which means that an 'itemid' in one table signifies the same lab order type as the same 'itemid' in the other table.
+
+### Inner Join
+
+An inner join:
+
+-   Retains only rows that match in both tables.
+
+-   Excludes rows without matches in both tables.
+
+-   Combines columns from both tables.
+
+```{r inner_join_template}
+
+# left_join() functions in R are structured like this:
+left_join(df1,df2,join_by(shared_column))
+
+```
 
 ```{r}
-# Without Joins
-db_lab_events <- tbl(con, "LABEVENTS")
-db_lab_items <- tbl(con, "D_LABITEMS")
-db_patients <- tbl(con, "PATIENTS")
+
+```
+
+```{r}
 # Will they be familiar with this table at this point? if no may need to look at table, fields, etc.
 ```
 
@@ -53,7 +116,6 @@ top_itemid <- db_lab_events |>
 top_itemid
 ```
 
-
 ```{r}
 lab_items |>
   filter(itemid == top_itemid)
@@ -63,7 +125,7 @@ But what if you wanted to do all the labs.....
 
 ## Joins
 
-Joins are a way to merge data, in particular tabular data like data frames. There are a large number of join types that are variably used depending on what you are trying to accomplish. 
+Joins are a way to merge data, in particular tabular data like data frames. There are a large number of join types that are variably used depending on what you are trying to accomplish.
 
 ### Left Joins
 
@@ -76,4 +138,38 @@ db_patients |>
 
 ```
 
+### Inner Join
+
 #### Your Turn 4
+
+```{r}
+db_lab_events <- tbl(con, "LABEVENTS")
+db_lab_items <- tbl(con, "D_LABITEMS")
+db_patients <- tbl(con, "PATIENTS")
+db_diagnoses <- tbl(con,"DIAGNOSES_ICD")
+```
+
+```{r}
+db_lab_events |>
+  inner_join(db_lab_items,join_by(itemid)) |>
+  filter(label == "Schistocytes") |>
+  distinct(subject_id) |>
+  inner_join(db_diagnoses, join_by(subject_id)) |>
+  arrange(subject_id,icd_code) |>
+  collect() |>
+  View()
+```
+
+```{r}
+db_lab_events |>
+  inner_join(db_lab_items,join_by(itemid)) |>
+  filter(label == "Schistocytes") |>
+  arrange(subject_id) |>
+  collect()
+```
+
+```{r}
+db_diagnoses |>
+  arrange(subject_id, icd_code) |>
+  collect()
+```
