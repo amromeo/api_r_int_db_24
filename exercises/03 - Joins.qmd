@@ -115,12 +115,10 @@ labevents_n <- labevents |>
 
 ```
 
-Follow-up questions: 
--   Examine the original labevents table. 
--   How many distinct itemid's does it have?
+Follow-up questions: - Examine the original labevents table. - How many distinct itemid's (test order types) does it have?
 
 -   Examine the labevents_n table you produced.
--   How many distinct ItemIDs (test order types) does it have?
+-   How many distinct itemid's (test order types) does it have?
 
 ```{r exercise_2b}
 labevents |>
@@ -129,9 +127,13 @@ labevents_n |>
 
 ```
 
-## Joins
+### Left Join
 
-Joins are a way to merge data, in particular tabular data like data frames. There are a large number of join types that are variably used depending on what you are trying to accomplish.
+A left join:
+
+-   Retains every row from the left table.
+-   Includes only matching rows from the right table.
+-   Combines columns from both tables.
 
 ### Left Joins
 
