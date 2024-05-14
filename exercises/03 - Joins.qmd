@@ -15,6 +15,7 @@ library(tidyverse)
 library(DBI)
 library(RSQLite)
 library(connections)
+library(fuzzyjoin)
 ```
 
 Connect to the MIMIC IV database
@@ -227,18 +228,19 @@ Non-equi joins
 
 Fuzzyjoin
 
-```{r}
+```{r fuzzyjoin}
 
 # Access tables
-diagnoses_icd9 <- tbl(mimic, "d_icd_diagnoses") %>% filter(icd_version == 9) %>% collect()
-diagnoses_icd10 <- tbl(mimic, "d_icd_diagnoses") %>% filter(icd_version == 10) %>% collect()
+diagnoses_icd9 <- tbl(mimic, "d_icd_diagnoses") |> filter(icd_version == 9) |> collect() |> sample_n(2000)
+diagnoses_icd10 <- tbl(mimic, "d_icd_diagnoses") |> filter(icd_version == 10) |> collect() |> sample_n(2000)
+
 
 # Perform a fuzzy join using string distance on descriptions
 result <- diagnoses_icd9 %>%
-  stringdist_left_join(diagnoses_icd10, by = c("long_title" = "long_title"), method = "jw", max_dist = 0.2)
+  stringdist_inner_join(diagnoses_icd10, by = c("long_title" = "long_title"), method = "jw", max_dist = 0.1)
 
 # Select relevant columns for the final result
-result <- result %>%
+result <- result |>
   select(icd9_code = icd_code.x, icd9_desc = long_title.x, icd10_code = icd_code.y, icd10_desc = long_title.y)
 
 ```
