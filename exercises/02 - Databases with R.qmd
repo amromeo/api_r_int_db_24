@@ -31,14 +31,16 @@ Connections to SQLite are straightforward because they are contained within a si
 Once connected you may want to see the tables within the database. You can use the `dbListTables()` function on the connection object to review this.
 
 ```{r}
+# example code - not executable
 dbListTables(conn = con)
 ```
 
 For a given table within the database you can inspect the fields (i.e. variables or columns) using the `dbListFields()` and providing the connection object as one argument as well as the name of the table of interest (in quotes) as another argument.
 
 ```{r}
+# example code - not executable
 dbListFields(conn = con,
-             name = "sample")
+             name = "table_name")
 ```
 
 ### Exercise 2: Connecting to the database and reviewing its structure
