@@ -55,10 +55,7 @@ Connect to the MIMIC IV database and answer:
 4.  *Top row is the winner!*
 
 ```{r exercise_1a}
-## Review - Create a new table object *labevents* that connects to the labevents MIMIC-IV table.
-labevents <- tbl(___, ______)
-
-## Create a pipe that starts from labevents database table and determines which itemid was ordered most frequently (This exercise reviews an exercise from Lesson 2)
+## Create a pipe that starts from labevents database table and determines which itemid was ordered most frequently (This exercise reviews an exercise from Session 2)
 labevents |>
 
   
@@ -104,11 +101,16 @@ We can use this function to bring in the information related to the lab orders t
 
 ```{r inner_join_example}
 inner_join(labevents,d_labitems,join_by(itemid))
+
+# OR
+
+labevents |>
+  inner_join(d_labitems,join_by(itemid))
 ```
 
 ### Exercise 2
 
-Starting with labevents, join to the d_labitems table using inner_join. Assign the result of your functions to labevents_n
+Starting with labevents, join to the d_labitems table using inner_join. Assign the result of your functions to `labevents_n`.
 
 Find the number of times each lab order was placed
 
@@ -146,7 +148,7 @@ labevents |>
 
 ### Exercise 3
 
-Only one patient had a bleeding time (itemid 51149)
+Only one patient had a bleeding time (itemid 51149).
 
 Using a left join find this patients gender and age by filtering the LABEVENTS table and joining to the PATIENTS table.
 
@@ -159,15 +161,17 @@ labevents |>
 
 ### Exercise 4
 
-You, the hematology laboratory director, is listening in on Hematology Grand Rounds while quietly shopping on Amazon.
+You, the hematology laboratory director, are listening in on Hematology Grand Rounds while quietly shopping on Amazon.
 
-During a discussion about TTP the Hematology Division Chief asks you if you knew what diagnoses have been applied to patients who have schistocytes on the blood smear?
+During a discussion about thrombotic thrombocytopenic purpura, the Hematology Division Chief asks you if you knew what diagnoses patients with schistocytes on their blood smear have…
+
+Using the following analytic strategy create a table containing the ICD codes associated with patients with schistocytes.
 
 Analytic Strategy:
 
 1.  Connect to LABEVENTS, D_LABITEMS, DIAGNOSES_ICD tables
-2.  Join LABEVENTS to D_LABITEMS table
-3.  Filter to patients positive for Schistocytes
+2.  Inner Join LABEVENTS to D_LABITEMS table
+3.  Filter to patients positive for "Schistocytes"
     i.  HINT: The Schistocytes component is only reported when schistocytes are present.
 4.  Join to DIAGNOSES_ICD table
 
@@ -184,8 +188,7 @@ Follow-up questions:
 -   Can a patient have multiple Schistocyte results?
     -   Can a patient have multiple diagnostic codes?
 
-If you have time:
-How would you change the analytic strategy to correctly answer the question?
+If you have time: How would you change the analytic strategy to correctly answer the question?
 
 ```{r exercise_4b}
 labevents |>
@@ -244,4 +247,3 @@ result <- result |>
   select(icd9_code = icd_code.x, icd9_desc = long_title.x, icd10_code = icd_code.y, icd10_desc = long_title.y)
 
 ```
-
