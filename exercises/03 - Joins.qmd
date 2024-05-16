@@ -79,9 +79,11 @@ Use one of the strategies above to determine what the most frequently ordered la
 
 ## Joins
 
-Joins are a mechanism to merge together data from two different tables that contain related data. In our example the labevents table and the d_labitems tables are related. The former contains information about each lab order placed in the EHR. the d_labitems table has metadata about each of the kinds of lab orders that can be placed in the EMR.
+Joins are a mechanism to merge together related data residing in two different tables. In our example the `labevents` table and the `d_labitems` tables are related. The former contains information about each lab order placed in the EHR. the `d_labitems` table has metadata about each of the kinds of lab orders that can be placed in the EMR.
 
-On a more concrete level, the 'itemid' columns in both tables hold matching values, which means that an 'itemid' in one table signifies the same lab order type as the same 'itemid' in the other table.
+On a more concrete level, the `itemid` columns in both tables hold matching values, which means that an `itemid` in one table signifies the same lab order type as the same `itemid` in the other table.
+
+There are several types of joins. In this workshop we will only review two.
 
 ### Inner Join
 
@@ -97,7 +99,7 @@ A prototypical left_join() function in R is structured like this:
 left_join(df1,df2,join_by(shared_column))
 ```
 
-We can use this function to bring in the information related to the lab orders to decode the item IDs.
+We can use this function to bring in the information from `d_labitems` that relates to the lab orders in order to decode the `itemid`'s.
 
 ```{r inner_join_example}
 inner_join(labevents,d_labitems,join_by(itemid))
@@ -110,7 +112,7 @@ labevents |>
 
 ### Exercise 2
 
-Starting with labevents, join to the d_labitems table using inner_join. Assign the result of your functions to `labevents_n`.
+Starting with `labevents` table, join to the `d_labitems` table using `inner_join`. Assign the result of your functions to `labevents_n`.
 
 Find the number of times each lab order was placed
 
@@ -157,23 +159,23 @@ labevents |>
   
 ```
 
-### Cartesian Products
+## Cartesian Products
 
 ### Exercise 4
 
 You, the hematology laboratory director, are listening in on Hematology Grand Rounds while quietly shopping on Amazon.
 
-During a discussion about thrombotic thrombocytopenic purpura, the Hematology Division Chief asks you if you knew what diagnoses patients with schistocytes on their blood smear have…
+During a discussion about thrombotic thrombocytopenic purpura, the Hematology Division Chief asks you if you knew what final diagnoses patients with schistocytes on their blood smear tend to have…
 
 Using the following analytic strategy create a table containing the ICD codes associated with patients with schistocytes.
 
 Analytic Strategy:
 
-1.  Connect to LABEVENTS, D_LABITEMS, DIAGNOSES_ICD tables
-2.  Inner Join LABEVENTS to D_LABITEMS table
+1.  Connect to `labevents`, `d_labitems`, `diagnoses_icd` tables
+2.  Inner Join `labevents` to the `d_labitems` table
 3.  Filter to patients positive for "Schistocytes"
     i.  HINT: The Schistocytes component is only reported when schistocytes are present.
-4.  Join to DIAGNOSES_ICD table
+4.  Join to `diagnoses_icd` table
 
 ```{r exercise_4}
 labevents |>
@@ -187,11 +189,15 @@ Follow-up questions:
     -   Is this expected?
 -   Can a patient have multiple Schistocyte results?
     -   Can a patient have multiple diagnostic codes?
+    
+When joining tables in which each row of each table can join to multiple rows of the other table based on the shared column, a so-called many to many relationship, you will end up with row duplication.
 
 If you have time: How would you change the analytic strategy to correctly answer the question?
 
 ```{r exercise_4b}
 labevents |>
+  
+  
 ```
 
 ## What Else?
