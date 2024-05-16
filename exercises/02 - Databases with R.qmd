@@ -21,7 +21,7 @@ The `dbConnect()` function in the DBI package allows you to create a connection 
 ```{r}
 # example code - not executable
 con <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
-                 dbname = “file_name.db”) # file (for SQLite or other file-based DBs)
+                 dbname = "file_name.db") # file (for SQLite or other file-based DBs)
 ```
 
 When the connection is established, the *con* connection object will be visible in your environment.
