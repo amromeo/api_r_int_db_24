@@ -39,7 +39,7 @@ admissions <- tbl(mimic, "ADMISSIONS")
 
 #### Exercise 1a:
 
-CAP is inspecting your lab and one of the inspectors asked your chair what your top performed test is.
+CAP is inspecting your lab and the lead inspectors asked your chair what your top performed test is.
 
 Your chair surreptitiously texts you as he distracts the inspector with some free Nespresso……
 
@@ -61,6 +61,8 @@ labevents |>
   
 ```
 
+### Exercise 1b:
+
 Based on the above you should have identified the lab order associated with itemid 50971 as the most frequently ordered test.
 
 But what is that lab test?
@@ -70,8 +72,6 @@ You can determine this using the tools you already know.
 1.  Find 50971 in the View pane for D_LABITEMS
 
 2.  Connect to D_LABITEMS and use `filter` to 50971.
-
-### Exercise 1b:
 
 Use one of the strategies above to determine what the most frequently ordered lab test is.
 
@@ -234,8 +234,16 @@ Fuzzyjoin
 ```{r fuzzyjoin}
 
 # Access tables
-diagnoses_icd9 <- tbl(mimic, "d_icd_diagnoses") |> filter(icd_version == 9) |> collect() |> sample_n(2000)
-diagnoses_icd10 <- tbl(mimic, "d_icd_diagnoses") |> filter(icd_version == 10) |> collect() |> sample_n(2000)
+diagnoses_icd9 <-
+  tbl(mimic, "d_icd_diagnoses") |> 
+  filter(icd_version == 9) |> 
+  collect() |> 
+  sample_n(2000)
+diagnoses_icd10 <-
+  tbl(mimic, "d_icd_diagnoses") |> 
+  filter(icd_version == 10) |> 
+  collect() |> 
+  sample_n(2000)
 
 
 # Perform a fuzzy join using string distance on descriptions
