@@ -1,0 +1,283 @@
+---
+title: "Joins"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: inline
+---
+
+## Introduction
+
+Please run the following 3 chunks needed for the session.
+
+Run the setup chunk below to load the packages we need for a database connection. For information regarding the functions of the `DBI`, `RSQLite`, and `connections` packages please see previous session. The `fuzzyjoin` package provides functions used in the 'Whats' Next' section only.
+
+```{r setup}
+library(rmarkdown)
+library(tidyverse)
+library(DBI)
+library(RSQLite)
+library(connections)
+library(fuzzyjoin)
+```
+
+Let's Connect to the MIMIC IV database. After running the following chunk a connection to the MIMC IV database is re-established and the `mimic` connection object will be visible in your environment.
+
+```{r connect}
+mimic <- dbConnect(drv = RSQLite::SQLite(), 
+                 dbname = "../mimic4.db")
+
+connection_view(mimic)  # Necessary to view SQLite database tables in the Connections pane
+```
+
+Finally let's create table objects that we will be using during the session.
+
+```{r con_tables}
+labevents <- tbl(mimic, "LABEVENTS")
+d_labitems <- tbl(mimic, "D_LABITEMS")
+patients <- tbl(mimic, "PATIENTS")
+diagnoses_icd <- tbl(mimic,"DIAGNOSES_ICD")
+admissions <- tbl(mimic, "ADMISSIONS")
+```
+
+#### Exercise 1a:
+
+CAP is inspecting your lab and the lead inspectors asked your chair what your top performed test is.
+
+Your chair surreptitiously texts you as he distracts the inspector with some free Nespresso……
+
+Connect to the MIMIC IV database and answer:
+
+**What the most commonly ordered lab test is in the database?**
+
+*HINT: Analytic Strategy:*
+
+1.  *Connect to the LABEVENTS table*
+2.  *Count the number of rows per itemid*
+3.  *Arrange from large to smallest count*
+4.  *Top row is the winner!*
+
+```{r exercise_1a}
+## Create a pipe that starts from labevents database table and determines which itemid was ordered most frequently (This exercise reviews an exercise from Session 2)
+labevents |>
+
+  
+```
+
+### Exercise 1b:
+
+Based on the above you should have identified the lab order associated with itemid 50971 as the most frequently ordered test.
+
+But what is that lab test? How can you determine what lab test corresponds to itemid 50971? You can determine this using the tools you already know.
+
+```{r exercise_1b}
+
+```
+
+You can determine this using the tools you already know.
+
+1.  Find 50971 in the View pane for D_LABITEMS
+
+2.  Connect to D_LABITEMS and use `filter` to 50971.
+
+Use one of the strategies above to determine what the most frequently ordered lab test is.
+
+Itemid 50971 is Potassium!
+
+**But what if you needed to know what the *top 100* test orders were?**
+
+## Joins
+
+Joins are mechanisms to merge together related data residing in two different tables. In our example the `labevents` table and the `d_labitems` tables are related. The former contains information about each lab order placed in the EHR. the `d_labitems` table has metadata about each of the kinds of lab orders that can be placed in the EMR.
+
+On a more concrete level, the `itemid` columns in both tables hold matching values, which means that an `itemid` in one table signifies the same lab order type as the same `itemid` in the other table.
+
+There are several types of joins. In this workshop we will only review two.
+
+### Inner Join
+
+An inner join:
+
+-   Retains only rows that match in both tables.
+-   Excludes rows without matches in both tables.
+-   Combines columns from both tables.
+
+A prototypical `inner_join()` function in R is structured like this:
+
+```{r inner_join_template}
+inner_join(df1, df2, join_by(shared_column))
+```
+
+We can use this function to bring in the information from `d_labitems` that relates to the lab orders in order to decode the itemid's.
+
+```{r inner_join_example}
+inner_join(labevents, d_labitems, join_by(itemid))
+
+# OR
+
+labevents |>
+  inner_join(d_labitems, join_by(itemid))
+```
+
+### Exercise 2
+
+Find the number of times all the lab order were placed with the correct lab test name. Starting with `labevents` table, join to the `d_labitems` table using `inner_join`. Then count the number of times that each itemid/label appears in the data. Assign the result of your functions to `labevents_n`.
+
+HINT: In order to count on two different columns put both in the `count()` function separated by a comma.
+
+```{r exercise_2a}
+labevents_n <- labevents |>
+
+```
+
+Follow-up questions:
+
+-   Examine the original `labevents` table:
+    -   How many distinct itemid's does it have?
+-   Examine the `labevents_n` table you produced:
+    -   How many distinct itemid's does it have?
+
+HINT: The `distinct()` function will give you the distinct values of a column
+
+```{r exercise_2b}
+labevents |> 
+  distinct(itemid)
+
+labevents_n %>% 
+  distinct(itemid)
+
+```
+
+Remember, an inner join results in a table containing only rows with matching values from both tables. Any rows in the left or right tables without matches will be excluded. Since the `labevents` table has more distinct itemids than the output of our inner_join, we know we've lost rows from `labevents`. This is a problem because it means we won't have accurate counts for test orders to report to our Chair!
+
+### Left Join
+
+One way to mitigate this issue is to use a left join rather than an inner join.
+
+A left join:
+
+-   Retains every row from the left table.
+-   Includes only matching rows from the right table.
+-   Combines columns from both tables.
+
+The `left_join()` function has the same syntax as all the other joins:
+
+```{r left_join_example}
+labevents |>
+  left_join(d_labitems,join_by(itemid))
+```
+
+### Exercise 3
+
+Only one patient had a bleeding time (itemid 51149).
+
+Using `left_join()` find this patients gender and age by filtering the `labevents` table and joining to the `patients` table.
+
+```{r exercise_3}
+labevents |>
+  
+```
+
+## Cartesian Products
+
+### Exercise 4
+
+You, the hematology laboratory director, are listening in on Hematology Grand Rounds while quietly shopping on Amazon.
+
+During a discussion about thrombotic thrombocytopenic purpura, the Hematology Division Chief asks you if you knew what final diagnoses patients with schistocytes on their blood smear tend to have…
+
+Using the following analytic strategy create a table containing the ICD codes associated with patients with schistocytes.
+
+Analytic Strategy:
+
+1.  Connect to `labevents`, `d_labitems`, `diagnoses_icd` tables (already done above)
+2.  Left join `labevents` to the `d_labitems` table
+3.  Filter to patients positive for "Schistocytes"
+    i.  HINT: The Schistocytes component is only reported when schistocytes are present.
+4.  Inner join to `diagnoses_icd` table using the shared column `subject_id`
+
+```{r exercise_4}
+labevents |>
+
+```
+
+Follow-up questions:
+
+-   Examine your resulting table:
+    -   How many rows does it have?
+    -   Is this expected?
+-   Can a patient have multiple Schistocyte results?
+    -   Can a patient have multiple diagnostic codes?
+
+When each row from both tables can join to multiple rows in the other table based on the shared column there is what's called a many-to-many relationship. This leads to row duplication as the algorithm attempts to match each row with all possible corresponding rows. Oftentimes this is not what is desired and creates headaches for analysts and data consumers.
+
+If you have time: How would you change the analytic strategy to correctly answer the question?
+
+```{r exercise_4b}
+labevents |>
+  
+  
+```
+
+## What Else?
+
+Join using multiple columns
+
+```{r multiplecols}
+# Join admission to lab orders matched not only to patient but also admission ID
+
+admissions %>%
+  inner_join(labevents, by = c("subject_id", "hadm_id")) 
+```
+
+### Join a table on itself, use nonequi join
+
+```{r}
+# Find the delta between results for the same patient
+labevents %>%
+  collect() %>%
+  rename(event1_charttime = charttime, event1_value = valuenum) %>%
+  inner_join(labevents %>% rename(event2_charttime = charttime, event2_value = valuenum) %>% collect(), 
+             join_by(subject_id, itemid,closest(event1_charttime < event2_charttime))) %>% 
+  #filter(event1_charttime < event2_charttime) %>%
+  mutate(delta_value = event2_value - event1_value) %>%
+  select(index.x,subject_id, itemid, event1_charttime, event1_value, index.y, event2_charttime, event2_value, delta_value) 
+```
+
+### Semi_join
+
+```{r}
+# All the testing for patients who have schistocytes
+
+labevents %>%
+  filter(itemid == 51287) %>%
+  semi_join(labevents,., join_by(subject_id))
+```
+
+### Fuzzyjoin
+
+```{r fuzzyjoin}
+# Find similar sounding ICD9 and ICD10 codes
+
+# Access tables
+diagnoses_icd9 <-
+  tbl(mimic, "d_icd_diagnoses") |> 
+  filter(icd_version == 9) |> 
+  collect() |> 
+  sample_n(2000)
+diagnoses_icd10 <-
+  tbl(mimic, "d_icd_diagnoses") |> 
+  filter(icd_version == 10) |> 
+  collect() |> 
+  sample_n(2000)
+
+
+# Perform a fuzzy join using string distance on descriptions
+result <- diagnoses_icd9 %>%
+  stringdist_inner_join(diagnoses_icd10, by = c("long_title" = "long_title"), method = "jw", max_dist = 0.1)
+
+# Select relevant columns for the final result
+result <- result |>
+  select(icd9_code = icd_code.x, icd9_desc = long_title.x, icd10_code = icd_code.y, icd10_desc = long_title.y)
+
+```
