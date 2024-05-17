@@ -157,7 +157,7 @@ labevents |>
 
 Only one patient had a bleeding time (itemid 51149).
 
-Using `left_join()` find this patients gender and age by filtering the `labevents` table and joining to the `patients` table.
+Using `left_join()` find this patients gender and age by filtering the `labevents` table and joining to the `patients` table using the shared column `subject_id`.
 
 ```{r exercise_3}
 labevents |>
@@ -187,10 +187,8 @@ labevents |>
 
 ```
 
-Follow-up questions:
-
 -   Examine your resulting table:
-    -   How many rows does it have?
+    -   Examine the diagnoses for the first patient (subject_id 10035631) 
     -   Is this expected?
 -   Can a patient have multiple Schistocyte results?
     -   Can a patient have multiple diagnostic codes?
