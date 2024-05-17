@@ -1,0 +1,17 @@
+---
+title: "01 - Package Installation"
+format: html
+---
+
+## Installing Packages
+
+To install packages for this workshop (using the install.packages function) select the run button in the code chunk below.
+
+
+```{r}
+
+install.packages(c("rmarkdown", "tidyverse", "DBI", "RSQLite", "connections", "fuzzyjoin"))
+
+```
+
+
