@@ -60,8 +60,9 @@ Connect to the MIMIC IV database and answer:
 ```{r exercise_1a}
 ## Create a pipe that starts from labevents database table and determines which itemid was ordered most frequently (This exercise reviews an exercise from Session 2)
 labevents |>
-
-  
+  count(itemid) |>
+  arrange(desc(n)) |>
+  slice_max(n)
 ```
 
 ### Exercise 1b:
@@ -71,14 +72,15 @@ Based on the above you should have identified the lab order associated with item
 But what is that lab test? How can you determine what lab test corresponds to itemid 50971? You can determine this using the tools you already know.
 
 ```{r exercise_1b}
-
+d_labitems |>
+  filter(itemid == 50971)
 ```
 
 You can determine this using the tools you already know.
 
 1.  Find 50971 in the View pane for D_LABITEMS
 
-2.  Connect to D_LABITEMS and use `filter` to 50971.
+2.  Connect to D_LABITEMS and use `filter()` to 50971.
 
 Use one of the strategies above to determine what the most frequently ordered lab test is.
 
@@ -127,6 +129,9 @@ HINT: In order to count on two different columns put both in the `count()` funct
 
 ```{r exercise_2a}
 labevents_n <- labevents |>
+  inner_join(d_labitems, join_by(itemid)) |>
+  count(itemid, label) |>
+  arrange(desc(n))
 
 ```
 
@@ -141,12 +146,16 @@ HINT: The `distinct()` function will give you the distinct values of a column
 
 ```{r exercise_2b}
 labevents |> 
-  distinct(itemid)
+  distinct(itemid) |>
+  count()
 
 labevents_n %>% 
-  distinct(itemid)
+  distinct(itemid) |>
+  count()
 
 ```
+
+You will have found that the `labevents` table has two more itemids than the result of the join.
 
 Remember, an inner join results in a table containing only rows with matching values from both tables. Any rows in the left or right tables without matches will be excluded. Since the `labevents` table has more distinct itemids than the output of our inner_join, we know we've lost rows from `labevents`. This is a problem because it means we won't have accurate counts for test orders to report to our Chair!
 
@@ -171,10 +180,13 @@ labevents |>
 
 Only one patient had a bleeding time (itemid 51149).
 
-Using `left_join()` find this patients gender and age by filtering the `labevents` table and joining to the `patients` table.
+Using `left_join()` find this patients gender and age by filtering the `labevents` table and joining to the `patients` table using the shared column `subject_id`.
 
 ```{r exercise_3}
 labevents |>
+  filter(itemid == 51149) |>
+  left_join(patients, join_by(subject_id)) |>
+  select(gender, anchor_age)
   
 ```
 
@@ -198,13 +210,15 @@ Analytic Strategy:
 
 ```{r exercise_4}
 labevents |>
-
+  left_join(d_labitems,join_by(itemid)) |>
+  filter(label == "Schistocytes") |>
+  inner_join(diagnoses_icd, join_by(subject_id)) 
 ```
 
 Follow-up questions:
 
 -   Examine your resulting table:
-    -   How many rows does it have?
+    -   Examine the diagnoses for the first patient (subject_id 10035631) 
     -   Is this expected?
 -   Can a patient have multiple Schistocyte results?
     -   Can a patient have multiple diagnostic codes?
@@ -214,9 +228,16 @@ When each row from both tables can join to multiple rows in the other table base
 If you have time: How would you change the analytic strategy to correctly answer the question?
 
 ```{r exercise_4b}
+# Most likely, the division chief wanted to know the frequency of specific diagnoses in this population. Therefore what we can do is isolate the patients with schistocytes with a distinct. Then we can join to the diagnoses_icd column. After that we can distinct again on the subject_id, icd_code, and long_title, so that we are counting each patient's ICD codes once. While ICD codes are typically applied at the admission level, we are simplifying this process for clarity.
+
 labevents |>
-  
-  
+  left_join(d_labitems,join_by(itemid)) |>
+  filter(label == "Schistocytes") |>
+  distinct(subject_id) |>
+  left_join(diagnoses_icd, join_by(subject_id)) |>
+  distinct(subject_id,icd_code,long_title) |>
+  count(icd_code, long_title) |>
+  arrange(desc(n))
 ```
 
 ## What Else?
