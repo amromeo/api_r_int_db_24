@@ -218,7 +218,7 @@ labevents |>
 Follow-up questions:
 
 -   Examine your resulting table:
-    -   Examine the diagnoses for the first patient (subject_id 10035631) 
+    -   Examine the diagnoses for the first patient (subject_id 10035631)
     -   Is this expected?
 -   Can a patient have multiple Schistocyte results?
     -   Can a patient have multiple diagnostic codes?
