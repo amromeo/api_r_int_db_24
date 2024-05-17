@@ -10,7 +10,7 @@ To install packages for this workshop (using the install.packages function) sele
 
 ```{r}
 
-install.packages(c("rmarkdown", "tidyverse", "DBI", "RSQLite", "connections", "fuzzyjoin"))
+install.packages(c("rmarkdown", "tidyverse", "DBI", "RSQLite", "connections", "fuzzyjoin", "REDCapR", "REDCapTidieR"))
 
 ```
 
