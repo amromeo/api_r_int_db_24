@@ -40,7 +40,7 @@ diagnoses_icd <- tbl(mimic,"DIAGNOSES_ICD")
 admissions <- tbl(mimic, "ADMISSIONS")
 ```
 
-#### Exercise 1a:
+#### Exercise 1a
 
 CAP is inspecting your lab and the lead inspectors asked your chair what your top performed test is.
 
@@ -60,18 +60,20 @@ Connect to the MIMIC IV database and answer:
 ```{r exercise_1a}
 ## Create a pipe that starts from labevents database table and determines which itemid was ordered most frequently (This exercise reviews an exercise from Session 2)
 labevents |>
+  count(________) |>
+  arrange(________)
 
-  
 ```
 
-### Exercise 1b:
+### Exercise 1b
 
 Based on the above you should have identified the lab order associated with itemid 50971 as the most frequently ordered test.
 
 But what is that lab test? How can you determine what lab test corresponds to itemid 50971? You can determine this using the tools you already know.
 
 ```{r exercise_1b}
-
+d_labitems |>
+  filter(________)
 ```
 
 **But what if you needed to know what the *top 100* test orders were?**
@@ -116,9 +118,11 @@ Find the number of times all the lab order were placed with the correct lab test
 HINT: In order to count on two different columns put both in the `count()` function separated by a comma.
 
 ```{r exercise_2a}
-labevents_n <- labevents |>  
-	inner_join(d_labitems, join_by(itemid)) |>
-  count(itemid,label)
+labevents_n <- labevents |>
+  inner_join(___________) |>
+  count(___________) |>
+  arrange(___________)
+  
 ```
 
 Follow-up questions:
@@ -131,6 +135,10 @@ Follow-up questions:
 HINT: The `distinct()` function will give you the distinct values of a column
 
 ```{r exercise_2b}
+labevents |>
+  
+  
+labevents_n |>
 
 ```
 
@@ -161,6 +169,9 @@ Using `left_join()` find this patients gender and age by filtering the `labevent
 
 ```{r exercise_3}
 labevents |>
+  filter(__________) |>
+  left_join(__________) |>
+  select(__________)
   
 ```
 
@@ -184,11 +195,14 @@ Analytic Strategy:
 
 ```{r exercise_4}
 labevents |>
+  left_join(___________) |>
+  filter(___________) |>
+  inner_join(___________) 
 
 ```
 
 -   Examine your resulting table:
-    -   Examine the diagnoses for the first patient (subject_id 10035631) 
+    -   Examine the diagnoses for the first patient (subject_id 10035631)
     -   Is this expected?
 -   Can a patient have multiple Schistocyte results?
     -   Can a patient have multiple diagnostic codes?
