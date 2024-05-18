@@ -6,20 +6,21 @@ editor: visual
 
 ## Exercise 1: Setup
 
-Run the setup chunk below to load the packages we need for a database connection. The DBI package provides functions to connect to and work with various types of databases. The RSQLite contains a specific driver to allow connections with SQLite databases, which are stored a single file.
+Run the setup chunk below to load the packages we need for a database connection. The DBI package provides functions to connect to and work with various types of databases. The RSQLite contains a specific driver to allow connections with SQLite databases, which are stored a single file. We are also loading the connections package that we will explain later in the lesson.
 
 ```{r setup}
 library(tidyverse)
 library(DBI)
 library(RSQLite)
+library(connections)
 ```
 
 ## Connecting to Databases
 
-The `dbConnect()` function in the DBI package allows you to create a connection object with the details of a specific database connection. Below we are creating a connection object *con* that utilizes the SQLite driver (expressed as the function `RSQLite::SQLite()`) to connect to a database stored in the file "file_name.db".
+The `dbConnect()` function in the DBI package allows you to create a connection object with the details of a specific database connection. Below we are creating a connection object *con* that utilizes the SQLite driver (expressed as the function `RSQLite::SQLite()` - note that :: before the function references the package that the function is part of, in case there is another package with an identically named function) to connect to a database stored in the file "file_name.db".
 
 ```{r}
-# example code - not executable
+# example code - do not run
 con <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
                  dbname = "file_name.db") # file (for SQLite or other file-based DBs)
 ```
@@ -31,14 +32,14 @@ Connections to SQLite are straightforward because they are contained within a si
 Once connected you may want to see the tables within the database. You can use the `dbListTables()` function on the connection object to review this.
 
 ```{r}
-# example code - not executable
+# example code - do not run
 dbListTables(conn = con)
 ```
 
 For a given table within the database you can inspect the fields (i.e. variables or columns) using the `dbListFields()` and providing the connection object as one argument as well as the name of the table of interest (in quotes) as another argument.
 
 ```{r}
-# example code - not executable
+# example code - do not run
 dbListFields(conn = con,
              name = "table_name")
 ```
@@ -54,22 +55,22 @@ getwd()
 Connect to the MIMIC database by building a connection object named "mimic" that connects to the SQLite database in the file mimic4.db. The file mimic4.db is available in the main directory for this project. (Hint: "../" can be used to point to the directory that is one level higher than the current directory, i.e. "../file_name".) After connecting, how can you confirm you are connected?
 
 ```{r}
-mimic <- dbConnect(drv = RSQLite::SQLite(), 
-                 dbname = "../mimic4.db")
+mimic <- dbConnect(drv = ......,
+                   dbname = ".......")
 
 ```
 
 Now list the tables in the mimic database.
 
 ```{r}
-dbListTables(conn = mimic)
+dbListTables(......)
 ```
 
 List the fields from *labevents* and *d_labitems* tables.
 
 ```{r}
-dbListFields(mimic,"labevents")
-dbListFields(mimic,"d_labitems")
+dbListFields(......., .......)
+
 ```
 
 ## Using the Connections Pane
@@ -77,7 +78,8 @@ dbListFields(mimic,"d_labitems")
 RStudio provides additional tools to assist with reviewing the tables and fields available in your database. In the top left of your RStudio window, where the Environment tab appears, there is a Connections tab that can be used to initiate database connections manually. To maintain reproducibility we encourage scripting the creation of the connection object, but to take advantage of the Connections tab we can use the *connections* package. Below we load the connections package and use the `connection_view()` function on our connection object *con*. This should update your Connections tab so you can see a SQLiteConnection object. You can click on the blue arrow to the left of the SQLiteConnection and drill down to the table and field levels.
 
 ```{r}
-library(connections)
+# example code - do not run
+# library(connections) - already loaded in setup chunk
 connection_view(con)
 ```
 
@@ -86,7 +88,7 @@ connection_view(con)
 Let's use the Connections tab to navigate the mimic database. Use the `connection_view()` on the database object we created.
 
 ```{r}
-connection_view(mimic)
+
 ```
 
 Navigate to the Connections window tab on the top right and answer the following questions:
@@ -100,7 +102,7 @@ Navigate to the Connections window tab on the top right and answer the following
 Once you connect to a database you will likely want to access the data and analyze it as if it were one or more data frames. We use the `tbl()` function and provide a connection object and a table name (in quotes) to create a table object.
 
 ```{r}
-# not executable
+# example code - do not run
 table_object <- tbl(connection_object, "table_name")
 ```
 
@@ -123,8 +125,8 @@ head(d_labitems, 100)
 Create a new table object *labevents* that connects to the labevents table. Review the first 100 rows of the table using the `head()` function. Are there any variables missing from this table that would help to interpret the output?
 
 ```{r}
-labevents <- tbl(mimic, "labevents")
-head(labevents, 100)
+labevents <- tbl(........, ........)
+head(........, ...)
 ```
 
 ## Using dbplyr to apply dplyr functions to databases
@@ -136,6 +138,7 @@ In this section we re-introduce functions from the dplyr package that have very 
 The `select()` function creates a subset of data focused on specific variables/fields (columns) from an existing table or data frame. The behavior is identical when applied to a table object as when it is applied to a data frame.
 
 ```{r}
+# example code - do not run
 column_subset <- select(table_object, column_1, column_2)
 ```
 
@@ -156,6 +159,7 @@ select(d_labitems, -category)
 The `filter()` function is used to create a subset of observations/rows that fulfill a specific inclusion criteria. One common criteria is variable being equal to a specific value.
 
 ```{r}
+# example code - do not run
 row_subset <- filter(table_object, column_name == criteria)
 ```
 
@@ -199,9 +203,9 @@ Using `select()` and `filter()` (and pipes), create a subset of data from the la
 
 ```{r}
 labevents_subset <- labevents |> 
-  filter(itemid == 50813) |> 
-  select(specimen_id, value, ref_range_lower, ref_range_upper)
-head(labevents_subset)
+  ....... |> 
+  .......
+head(.......)
 ```
 
 ### Count
@@ -229,9 +233,9 @@ labtest_counts
 Using `count()` generate a new table object tests_per_subject that shows the number of lab events per subject_id. View the first 100 rows of the new table.
 
 ```{r}
-tests_per_subject <- labevents |> 
-  count(subject_id)
-head(tests_per_subject, 100)
+tests_per_subject <- ........ |> 
+  ......(.......)
+head(tests_per_subject, ...)
 ```
 
 ### dbplyr and SQL translation
@@ -264,9 +268,10 @@ labtest_counts <- labevents |>
 
 ### Memory Considerations
 
-We mentioned previously that connection and table objects do not have the same characteristics as typical data frames, for which the contents are available in your environment. However, it is possible to bring the contents of a table into memory as a data frame using the `collect()` function.
+We mentioned previously that connection and table objects do not have the same characteristics as typical data frames, for which the contents are available in your environment. This is an advantage of lazy evaluation and can support the preservation of your system's memory. However, it is possible to bring the contents of a table into memory as a data frame using the `collect()` function.
 
 ```{r}
+# example code - do not run
 retrieved_object <- table_object |> 
   collect()
 ```
@@ -285,6 +290,7 @@ View(labtest_counts)
 When we are done working with databases we can use the `dbDisconnect()` function on the specific connection object of interest to close the database connection.
 
 ```{r}
+# example code - do not run
 dbDisconnect(con)
 ```
 
