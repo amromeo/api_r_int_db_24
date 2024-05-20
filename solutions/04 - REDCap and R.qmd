@@ -64,13 +64,13 @@ Go ahead an explore `redcart` to confirm the following features of the supertibb
 
 Without writing any code, just by working in the *Data Viewer*, try to answer the following questions:
 
-1.  How many instruments are in the `redcart` database?
+1.  How many instruments are in the `redcart` database? **18**
 
-2.  How many rows are in the `adverse_events` table?
+2.  How many rows are in the `adverse_events` table? **53**
 
-3.  Is the `medical_history` instrument repeating or nonrepeating? How can you tell? Why would it be designed this way?
+3.  Is the `medical_history` instrument repeating or nonrepeating? How can you tell? Why would it be designed this way? **repeating - allows capturing multiple medical diagnoses per patient**
 
-4.  Drill down into the `demographics` instrument. How many patients are captured in here? Who is the oldest patient on the trial?
+4.  Drill down into the `demographics` instrument. How many patients are captured in here? Who is the oldest patient on the trial? **14 patients. Arya Stark is oldest.**
 
 > **NOTE: Studies have shown that explaining material you just learned to others can boost memory. So if you're done early, you might want to get up and help out others! :)**
 
@@ -108,12 +108,24 @@ Complete the code chunk below by piping the `redcart` supertibble into the `add_
 ```{r}
 redcart <- redcart |>
   ________()
+
+## solution below
+redcart <- redcart |>
+  add_skimr_metadata()
 ```
 
 Explore the **metadata** tibble of the `demographics` instrument to answer the following questions:
 
-1.  What is the average age of study participants? Standard deviation?
-2.  In the `hematology` table, which blood counts are approximately normally distributed? Which ones aren't?
+1.  What is the average age of study participants? Standard deviation? **Average is 8.1 years, SD is 6.6 years.**
+2.  In the `hematology` table, which blood counts are approximately normally distributed? Which ones aren't? RBC, HgB, Hct, and Plt are all approximately normally distributed. The other ones aren't. See the code below to extract the skimr-generated numeric histograms.
+
+```{r}
+### remove from exercises
+
+redcart[[4]][[11]] |>   # Pull out the metadata table for demographics
+  filter(skim_type == "numeric") |> # only include numeric fields
+  select(field_name, numeric.hist)
+```
 
 ## Adding Variable Labels
 
@@ -131,6 +143,11 @@ To complete the following exercise, we'll start from scratch:
 redcart <- _______(uri, token) |>
   _____________() |>
   _____________()
+
+## solution below
+redcart <- read_redcap(uri, token) |>
+  add_skimr_metadata() |>
+  make_labelled()
 ```
 
 Explore `redcart` in the Data Viewer. Note that the Posit IDE supports labels! Drill down into the `demographics` table and note the variable labels there. Can you guess how REDCapTidieR generates variable labels for fields? **REDCapTidieR pulls variable labels from the REDCap field labels (data entry prompts).**
@@ -142,7 +159,9 @@ REDCapTidieR provides the `write_redcap_xlsx()` function to export a REDCap proj
 In the code chunk below, write code to export the `redcart` supertibble to a file named `redcart.xlsx`. The run the chunk.
 
 ```{r}
-
+### solution below
+redcart |>
+  write_redcap_xlsx("redcart.xlsx")
 ```
 
 Can you see the Excel file in the Files pane? Click on it and choose "View File" to open it. Note: this assumes you have Excel installed on your computer.
