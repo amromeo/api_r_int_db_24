@@ -1,0 +1,302 @@
+---
+title: "02 - Databases with R"
+format: html
+editor: visual
+---
+
+## Exercise 1: Setup
+
+Run the setup chunk below to load the packages we need for a database connection. The DBI package provides functions to connect to and work with various types of databases. The RSQLite contains a specific driver to allow connections with SQLite databases, which are stored a single file.
+
+```{r setup}
+library(tidyverse)
+library(DBI)
+library(RSQLite)
+```
+
+## Connecting to Databases
+
+The `dbConnect()` function in the DBI package allows you to create a connection object with the details of a specific database connection. Below we are creating a connection object *con* that utilizes the SQLite driver (expressed as the function `RSQLite::SQLite()` - note that :: before the function references the package that the function is part of, in case there is another package with an identically named function) to connect to a database stored in the file "file_name.db".
+
+```{r}
+# example code - do not run
+con <- dbConnect(drv = RSQLite::SQLite(), # driver - type of SQL connection
+                 dbname = "file_name.db") # file (for SQLite or other file-based DBs)
+```
+
+When the connection is established, the *con* connection object will be visible in your environment.
+
+Connections to SQLite are straightforward because they are contained within a single file and do not require additional credentials or other technical connection details (e.g. a port). Review the DBI package documentation and vignettes to learn how to connect to other types of databases using different drivers.
+
+Once connected you may want to see the tables within the database. You can use the `dbListTables()` function on the connection object to review this.
+
+```{r}
+# example code - do not run
+dbListTables(conn = con)
+```
+
+For a given table within the database you can inspect the fields (i.e. variables or columns) using the `dbListFields()` and providing the connection object as one argument as well as the name of the table of interest (in quotes) as another argument.
+
+```{r}
+# example code - do not run
+dbListFields(conn = con,
+             name = "table_name")
+```
+
+### Exercise 2: Connecting to the database and reviewing its structure
+
+First use the `getwd()` function to identify the working directory for the notebook. This is important because you may have to direct R to the appropriate path for a file if it is not already in your working directory.
+
+```{r}
+getwd()
+```
+
+Connect to the MIMIC database by building a connection object named "mimic" that connects to the SQLite database in the file mimic4.db. The file mimic4.db is available in the main directory for this project. (Hint: "../" can be used to point to the directory that is one level higher than the current directory, i.e. "../file_name".) After connecting, how can you confirm you are connected?
+
+```{r}
+mimic <- dbConnect(drv = RSQLite::SQLite(), 
+                 dbname = "../mimic4.db")
+
+```
+
+Now list the tables in the mimic database.
+
+```{r}
+dbListTables(conn = mimic)
+```
+
+List the fields from *labevents* and *d_labitems* tables.
+
+```{r}
+dbListFields(mimic,"labevents")
+dbListFields(mimic,"d_labitems")
+```
+
+## Using the Connections Pane
+
+RStudio provides additional tools to assist with reviewing the tables and fields available in your database. In the top left of your RStudio window, where the Environment tab appears, there is a Connections tab that can be used to initiate database connections manually. To maintain reproducibility we encourage scripting the creation of the connection object, but to take advantage of the Connections tab we can use the *connections* package. Below we load the connections package and use the `connection_view()` function on our connection object *con*. This should update your Connections tab so you can see a SQLiteConnection object. You can click on the blue arrow to the left of the SQLiteConnection and drill down to the table and field levels.
+
+```{r}
+# example code - do not run
+# library(connections) - already loaded in setup chunk
+connection_view(con)
+```
+
+### Exercise 3: Viewing the database in the Connections tab
+
+Let's use the Connections tab to navigate the mimic database. Use the `connection_view()` on the database object we created.
+
+```{r}
+connection_view(mimic)
+```
+
+Navigate to the Connections window tab on the top right and answer the following questions:
+
+-   If we are interested in reviewing details about laboratory test results, which tables would we be interested in?
+
+-   In the d_labitems table, how many fields are present?
+
+## Working with Tables
+
+Once you connect to a database you will likely want to access the data and analyze it as if it were one or more data frames. We use the `tbl()` function and provide a connection object and a table name (in quotes) to create a table object.
+
+```{r}
+# example code - do not run
+table_object <- tbl(connection_object, "table_name")
+```
+
+We can connect to the mimic database and the *d_labitems* table:
+
+```{r}
+d_labitems <- tbl(mimic, "d_labitems")
+```
+
+Note that this table object now appears in your Environment. However when you click on it to display the object in the View window you do not see any raw data and see some information about the connection object instead. That is because the table object is not actually a data frame - it is just a connection to the table in the database. No data has been brought into the environment (yet).
+
+We are able to use the `head()` function to visualize the first 10 observations/rows:
+
+```{r}
+head(d_labitems, 100)
+```
+
+### Exercise 4: Connecting to a Table
+
+Create a new table object *labevents* that connects to the labevents table. Review the first 100 rows of the table using the `head()` function. Are there any variables missing from this table that would help to interpret the output?
+
+```{r}
+labevents <- tbl(mimic, "labevents")
+head(labevents, 100)
+```
+
+## Using dbplyr to apply dplyr functions to databases
+
+In this section we re-introduce functions from the dplyr package that have very similar behavior when applied to databases and their table objects.
+
+### Select
+
+The `select()` function creates a subset of data focused on specific variables/fields (columns) from an existing table or data frame. The behavior is identical when applied to a table object as when it is applied to a data frame.
+
+```{r}
+# example code - do not run
+column_subset <- select(table_object, column_1, column_2)
+```
+
+In this example we are selecting two variables from the d_labitems object.
+
+```{r}
+select(d_labitems, itemid, label)
+```
+
+Specific variables can be removed with "-".
+
+```{r}
+select(d_labitems, -category)
+```
+
+### Filter
+
+The `filter()` function is used to create a subset of observations/rows that fulfill a specific inclusion criteria. One common criteria is variable being equal to a specific value.
+
+```{r}
+# example code - do not run
+row_subset <- filter(table_object, column_name == criteria)
+```
+
+For example we may want to see the lab test items that are labelled as "Glucose".
+
+```{r}
+filter(d_labitems, label == "Glucose")
+```
+
+There are a variety of other operators that can be used as inclusion criteria that we do not address here but appear in the `filter()` documentation as well as the *R for Data Science* text.
+
+### Pipes
+
+Data transformation often requires sequential steps for which there is limited value in creating intermediate data frames/objects. One way to streamline your code is by using the pipe `|>` (R's native pipe, the older version of the pipe is `%>%`). The pipe operator moves the object/output from the left side of the pipe into the first argument of the function of the right side of the pipe (or on the next line). The two following code chunks are therefore equivalent:
+
+```{r}
+filter(d_labitems, label == "Glucose")
+```
+
+```{r}
+d_labitems |> filter(label == "Glucose")
+```
+
+Pipes allow you to link together sequential analysis steps in a readable format.
+
+```{r}
+labevents |>
+  filter(itemid == 50809) |> # itemid for Glucose
+  select(subject_id, specimen_id, itemid, value, valueuom)
+```
+
+There are keyboard shortcuts to make adding pipes easier:
+
+-   Command + Shift + "m" (the key) on a Mac
+
+-   Control + Shift + "m" on Windows
+
+### Exercise 5: Applying dplyr functions
+
+Using `select()` and `filter()` (and pipes), create a subset of data from the labevents table that includes lactate observations (itemid 50813) and the following variables: specimenid, value, ref_range_lower, ref_range_upper. Create a new table object labevents_subset to store that data. Use the `head()` function to review the first rows of the table.
+
+```{r}
+labevents_subset <- labevents |> 
+  filter(itemid == 50813) |> 
+  select(specimen_id, value, ref_range_lower, ref_range_upper)
+head(labevents_subset)
+```
+
+### Count
+
+The `group_by()` and `summarize()` functions are arguably the most useful functions in the dplyr package, as they allow you to create subsets of your data based on one or more variables and then apply calculations or summaries to those groups in parallel using limited code.
+
+If we wanted to see the number of times each itemid (think of this as a test from the catalog) appears in our labevents table, we can group the data by itemid and then summarize each group with the `n()` function which simply counts the number of rows each itemid appears.
+
+```{r}
+labevents |> 
+  group_by(itemid) |> 
+  summarize(test_count = n())
+```
+
+There are multiple other functions that can be applied within the `summary()` function but counting rows is a frequent operation. If the only operation you need is to count rows, you can further simplify your code by using the `count()` function:
+
+```{r}
+labtest_counts <- labevents |> 
+  count(itemid) # variable to subset the data on for counting rows
+labtest_counts
+```
+
+### Exercise 6
+
+Using `count()` generate a new table object tests_per_subject that shows the number of lab events per subject_id. View the first 100 rows of the new table.
+
+```{r}
+tests_per_subject <- labevents |> 
+  count(subject_id)
+head(tests_per_subject, 100)
+```
+
+### dbplyr and SQL translation
+
+When you apply dplyr functions to database connections and table objects, R is using another package called dbplyr to translate the R code you have written into SQL and then query the database with that translated code.
+
+For example the following code to create a subset of glucose events:
+
+```{r}
+labevents|>
+  filter(itemid == 50809) |> # itemid for Glucose
+  select(subject_id, specimen_id, itemid, value, valueuom)
+```
+
+would be translated into the following SQL:
+
+```{sql, connection = mimic}
+SELECT subject_id, specimen_id, itemid, value, valueuom
+FROM labevents
+WHERE itemid = 50809
+```
+
+The expected SQL output can be generated using the `show_query()` function:
+
+```{r}
+labtest_counts <- labevents |> 
+  count(itemid) |> 
+  show_query()
+```
+
+### Memory Considerations
+
+We mentioned previously that connection and table objects do not have the same characteristics as typical data frames, for which the contents are available in your environment. This is an advantage of lazy evaluation and can support the preservation of your system's memory. However, it is possible to bring the contents of a table into memory as a data frame using the `collect()` function.
+
+```{r}
+# example code - do not run
+retrieved_object <- table_object |> 
+  collect()
+```
+
+Here we can take the count of itemids from the labevents table and bring the data into a data frame within our environment.
+
+```{r}
+labtest_counts <- labevents |> 
+  count(itemid) |> 
+  collect()
+View(labtest_counts)
+```
+
+## Disconnecting from Databases
+
+When we are done working with databases we can use the `dbDisconnect()` function on the specific connection object of interest to close the database connection.
+
+```{r}
+# example code - do not run
+dbDisconnect(con)
+```
+
+To close are specific connection to the mimic database:
+
+```{r}
+dbDisconnect(mimic)
+```
+
+Note that you will have to reconnect to the database for future lessons.
