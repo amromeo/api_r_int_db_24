@@ -6,7 +6,7 @@ editor: visual
 
 ## Downloading data with REDCapR
 
-The following code chunk will use the **REDCapR** package to connect to a REDCap database and download its data into an object called `my_redcap_data`. Run the code chunk.
+The following code chunks will use the **REDCapR** package to connect to a REDCap database and download its data into an object called `my_redcap_data`. Run the code chunks.
 
 ```{r}
 library(REDCapR)
@@ -15,7 +15,9 @@ creds <- retrieve_credential_local("../data-private/credentials.csv", 1)
 
 uri <- creds$redcap_uri
 token <- creds$token
+```
 
+```{r}
 my_redcap_data <- redcap_read_oneshot(uri, token)$data
 ```
 
@@ -123,8 +125,8 @@ Explore the **metadata** tibble of the `demographics` instrument to answer the f
 ### remove from exercises
 
 redcart[[4]][[11]] |>   # Pull out the metadata table for demographics
-  filter(skim_type == "numeric") |> # only include numeric fields
-  select(field_name, numeric.hist)
+  dplyr::filter(skim_type == "numeric") |> # only include numeric fields
+  dplyr::select(field_name, numeric.hist)
 ```
 
 ## Adding Variable Labels

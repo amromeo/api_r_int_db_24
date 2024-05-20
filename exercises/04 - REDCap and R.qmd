@@ -6,7 +6,7 @@ editor: visual
 
 ## Downloading data with REDCapR
 
-The following code chunk will use the **REDCapR** package to connect to a REDCap database and download its data into an object called `my_redcap_data`. Run the code chunk.
+The following two code chunks will use the **REDCapR** package to connect to a REDCap database and download its data into an object called `my_redcap_data`. Run the code chunks.
 
 ```{r}
 library(REDCapR)
@@ -15,7 +15,9 @@ creds <- retrieve_credential_local("../data-private/credentials.csv", 1)
 
 uri <- creds$redcap_uri
 token <- creds$token
+```
 
+```{r}
 my_redcap_data <- redcap_read_oneshot(uri, token)$data
 ```
 
