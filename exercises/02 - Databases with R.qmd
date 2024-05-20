@@ -75,7 +75,7 @@ dbListFields(......., .......)
 
 ## Using the Connections Pane
 
-RStudio provides additional tools to assist with reviewing the tables and fields available in your database. In the top left of your RStudio window, where the Environment tab appears, there is a Connections tab that can be used to initiate database connections manually. To maintain reproducibility we encourage scripting the creation of the connection object, but to take advantage of the Connections tab we can use the *connections* package. Below we load the connections package and use the `connection_view()` function on our connection object *con*. This should update your Connections tab so you can see a SQLiteConnection object. You can click on the blue arrow to the left of the SQLiteConnection and drill down to the table and field levels.
+RStudio provides additional tools to assist with reviewing the tables and fields available in your database. In the top right of your RStudio window, where the Environment tab appears, there is a Connections tab that can be used to initiate database connections manually. To maintain reproducibility we encourage scripting the creation of the connection object, but to take advantage of the Connections tab we can use the *connections* package. Below we load the connections package and use the `connection_view()` function on our connection object *con*. This should update your Connections tab so you can see a SQLiteConnection object. You can click on the blue arrow to the left of the SQLiteConnection and drill down to the table and field levels.
 
 ```{r}
 # example code - do not run
